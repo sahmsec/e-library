@@ -52,8 +52,8 @@ export default function Footer() {
               <p className="text-xs uppercase tracking-[0.28em] text-white/50">
                 Email
               </p>
-              <a href="mailto:hello@elibrary-demo.com" className="text-white">
-                hello@elibrary-demo.com
+              <a href="mailto:hello@e-library.com" className="text-white">
+                hello@e-library.com
               </a>
             </div>
           </div>
@@ -77,7 +77,7 @@ export default function Footer() {
                 Visit
               </p>
               <p className="text-white/85">
-                24 Reading Lane, Dhaka Knowledge District
+                Dhaka, Bangladesh
               </p>
             </div>
           </div>
