@@ -1,10 +1,49 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import SocialLoginButton from "@/components/SocialLoginButton";
+import { authClient } from "@/lib/auth-client";
 
-export default function RegisterForm() {
+export default function RegisterForm({ redirectTo }) {
+  const router = useRouter();
+  const [error, setError] = useState(null);
+  const [isPending, startTransition] = useTransition();
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    setError(null);
+
+    const formData = new FormData(event.currentTarget);
+    const name = String(formData.get("name") ?? "");
+    const email = String(formData.get("email") ?? "");
+    const image = String(formData.get("image") ?? "");
+    const password = String(formData.get("password") ?? "");
+
+    startTransition(async () => {
+      const result = await authClient.signUp.email({
+        name,
+        email,
+        image,
+        password,
+      });
+
+      if (result.error) {
+        const message = result.error.message ?? "Unable to create your account.";
+        setError(message);
+        toast.error(message);
+        return;
+      }
+
+      toast.success("Registration complete. Please log in.");
+      router.push("/login?registered=1");
+      router.refresh();
+    });
+  };
+
   return (
     <div className="library-card w-full rounded-[2rem] border border-white/70 p-8 sm:p-10">
       <div className="mb-8 space-y-3">
@@ -19,7 +58,13 @@ export default function RegisterForm() {
         </p>
       </div>
 
-      <form className="space-y-5">
+      {error ? (
+        <div className="alert mb-6 border border-red-300 bg-red-50 text-red-700">
+          <span>{error}</span>
+        </div>
+      ) : null}
+
+      <form onSubmit={handleSubmit} className="space-y-5">
         <label className="block">
           <span className="mb-2 block text-sm font-semibold text-library-ink">
             Name
@@ -76,6 +121,7 @@ export default function RegisterForm() {
         <button
           type="submit"
           className="btn h-13 w-full rounded-full border-none bg-library-copper text-white hover:bg-[#a4572d]"
+          disabled={isPending}
         >
           Register
         </button>
@@ -89,7 +135,7 @@ export default function RegisterForm() {
         <div className="h-px flex-1 bg-library-ink/10" />
       </div>
 
-      <SocialLoginButton />
+      <SocialLoginButton redirectTo={redirectTo} />
 
       <p className="mt-6 text-center text-sm text-library-ink/68">
         Already have an account?{" "}

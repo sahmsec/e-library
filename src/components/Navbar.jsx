@@ -1,21 +1,49 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { BookOpenText, Library, Menu, User2 } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { BookOpenText, Library, LogOut, Menu, User2 } from "lucide-react";
+import { useTransition } from "react";
+import { toast } from "sonner";
 
-function cn(...classes) {
-  return classes.filter(Boolean).join(" ");
-}
+import { authClient } from "@/lib/auth-client";
+import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "Home" },
-  { href: "/books", label: "All Books" },
-  { href: "/profile", label: "My Profile" },
+  {
+    href: "/",
+    label: "Home",
+  },
+  {
+    href: "/books",
+    label: "All Books",
+  },
+  {
+    href: "/profile",
+    label: "My Profile",
+  },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
+  const [isSigningOut, startSigningOut] = useTransition();
+
+  const handleSignOut = () => {
+    startSigningOut(async () => {
+      const result = await authClient.signOut();
+
+      if (result.error) {
+        toast.error(result.error.message);
+        return;
+      }
+
+      toast.success("Signed out successfully.");
+      router.push("/");
+      router.refresh();
+    });
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-library-ink/10 bg-background/85 backdrop-blur-xl">
@@ -40,7 +68,6 @@ export default function Navbar() {
               ))}
             </ul>
           </div>
-
           <Link
             href="/"
             className="group inline-flex items-center gap-3 rounded-full border border-library-ink/10 bg-white/80 px-4 py-2 shadow-sm transition hover:border-library-copper/40 hover:shadow-lg"
@@ -77,20 +104,35 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <div className="hidden items-center gap-2 rounded-full border border-library-ink/10 bg-white/80 px-4 py-2 md:flex">
-            <User2 className="size-4 text-library-copper" />
-            <span className="text-sm font-semibold text-library-ink">
-              Demo Reader
-            </span>
-          </div>
-
-          <Link
-            href="/login"
-            className="btn rounded-full border-none bg-library-ink px-5 text-white shadow-lg shadow-library-ink/20 hover:bg-[#091626]"
-          >
-            <BookOpenText className="size-4" />
-            Login
-          </Link>
+          {isPending ? (
+            <span className="loading loading-spinner loading-sm text-library-copper" />
+          ) : session?.user ? (
+            <>
+              <div className="hidden items-center gap-2 rounded-full border border-library-ink/10 bg-white/80 px-4 py-2 md:flex">
+                <User2 className="size-4 text-library-copper" />
+                <span className="text-sm font-semibold text-library-ink">
+                  {session.user.name}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="btn rounded-full border-none bg-library-copper px-5 text-white shadow-lg shadow-library-copper/25 hover:bg-[#a4572d]"
+                disabled={isSigningOut}
+              >
+                <LogOut className="size-4" />
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              className="btn rounded-full border-none bg-library-ink px-5 text-white shadow-lg shadow-library-ink/20 hover:bg-[#091626]"
+            >
+              <BookOpenText className="size-4" />
+              Login
+            </Link>
+          )}
         </div>
       </div>
     </header>

@@ -1,10 +1,49 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import SocialLoginButton from "@/components/SocialLoginButton";
+import { authClient } from "@/lib/auth-client";
 
-export default function LoginForm() {
+export default function LoginForm({
+  redirectTo,
+  showRegistrationMessage = false,
+}) {
+  const router = useRouter();
+  const [error, setError] = useState(null);
+  const [isPending, startTransition] = useTransition();
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    setError(null);
+
+    const formData = new FormData(event.currentTarget);
+    const email = String(formData.get("email") ?? "");
+    const password = String(formData.get("password") ?? "");
+
+    startTransition(async () => {
+      const result = await authClient.signIn.email({
+        email,
+        password,
+        rememberMe: true,
+      });
+
+      if (result.error) {
+        const message = result.error.message ?? "Unable to sign in.";
+        setError(message);
+        toast.error(message);
+        return;
+      }
+
+      toast.success("Welcome back to your reading room.");
+      router.push(redirectTo);
+      router.refresh();
+    });
+  };
+
   return (
     <div className="library-card w-full rounded-[2rem] border border-white/70 p-8 sm:p-10">
       <div className="mb-8 space-y-3">
@@ -19,7 +58,19 @@ export default function LoginForm() {
         </p>
       </div>
 
-      <form className="space-y-5">
+      {showRegistrationMessage ? (
+        <div className="alert mb-6 border border-library-mint/40 bg-library-mint/15 text-library-ink">
+          <span>Your account is ready. Please log in to continue.</span>
+        </div>
+      ) : null}
+
+      {error ? (
+        <div className="alert mb-6 border border-red-300 bg-red-50 text-red-700">
+          <span>{error}</span>
+        </div>
+      ) : null}
+
+      <form onSubmit={handleSubmit} className="space-y-5">
         <label className="block">
           <span className="mb-2 block text-sm font-semibold text-library-ink">
             Email
@@ -49,6 +100,7 @@ export default function LoginForm() {
         <button
           type="submit"
           className="btn h-13 w-full rounded-full border-none bg-library-ink text-white hover:bg-[#091626]"
+          disabled={isPending}
         >
           Login
         </button>
@@ -62,7 +114,7 @@ export default function LoginForm() {
         <div className="h-px flex-1 bg-library-ink/10" />
       </div>
 
-      <SocialLoginButton />
+      <SocialLoginButton redirectTo={redirectTo} />
 
       <p className="mt-6 text-center text-sm text-library-ink/68">
         New here?{" "}
