@@ -1,35 +1,47 @@
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import BorrowButton from "@/components/BorrowButton";
 import { getBookById } from "@/lib/books";
 import { getAvailableCopies, hasActiveBorrow } from "@/lib/borrows";
 import { getAuthSession } from "@/lib/session";
+import { buildLoginRedirect } from "@/lib/utils";
 
 export default async function BookDetailsPage({ params }) {
   const { id } = await params;
-  const book = getBookById(id);
+  const book = await getBookById(id);
 
   if (!book) {
     notFound();
   }
 
   const session = await getAuthSession();
-  const copiesLeft = await getAvailableCopies(id);
-  const alreadyBorrowed = session
-    ? await hasActiveBorrow(session.user.id, id)
-    : false;
+
+  if (!session) {
+    redirect(buildLoginRedirect(`/books/${id}`));
+  }
+
+  const [copiesLeft, alreadyBorrowed] = await Promise.all([
+    getAvailableCopies(id),
+    hasActiveBorrow(session.user.id, id),
+  ]);
 
   return (
     <section className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
       <div className="library-card h-fit rounded-[2.5rem] border border-white/70 p-5 lg:sticky lg:top-28">
-        <Image
-          src={book.image_url}
-          alt={`${book.title} cover`}
-          width={600}
-          height={900}
-          className="w-full rounded-[2rem] object-cover"
-        />
+        {book.image_url ? (
+          <Image
+            src={book.image_url}
+            alt={`${book.title} cover`}
+            width={600}
+            height={900}
+            className="w-full rounded-[2rem] object-cover"
+          />
+        ) : (
+          <div className="flex aspect-[2/3] w-full items-center justify-center rounded-[2rem] bg-white text-sm font-semibold text-library-ink/60">
+            No cover available
+          </div>
+        )}
       </div>
 
       <div className="space-y-6">
@@ -57,9 +69,10 @@ export default async function BookDetailsPage({ params }) {
             <div className="rounded-full bg-library-ink px-5 py-3 text-sm font-semibold text-white">
               {copiesLeft} {copiesLeft === 1 ? "copy" : "copies"} left
             </div>
+
             {alreadyBorrowed ? (
               <div className="rounded-full bg-library-mint/25 px-5 py-3 text-sm font-semibold text-library-ink">
-                Already in your borrowed shelf
+                Borrowed
               </div>
             ) : null}
           </div>
@@ -79,18 +92,18 @@ export default async function BookDetailsPage({ params }) {
               Borrowing Note
             </p>
             <p className="mt-3 text-sm leading-7 text-library-ink/70">
-              Borrowed titles appear instantly in your profile after a
-              successful borrow.
+              Borrowed titles appear instantly in your profile, helping you keep
+              track of what is already on your shelf.
             </p>
           </div>
 
           <div className="library-card rounded-[1.75rem] border border-white/70 p-6">
             <p className="text-sm uppercase tracking-[0.28em] text-library-copper">
-              Account Check
+              Private Route
             </p>
             <p className="mt-3 text-sm leading-7 text-library-ink/70">
-              If a visitor is not logged in, clicking borrow sends them to the
-              login page first.
+              This page is protected so only authenticated readers can review
+              sensitive availability and borrow actions.
             </p>
           </div>
         </div>

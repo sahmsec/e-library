@@ -14,7 +14,7 @@ export async function countActiveBorrows(bookId) {
 }
 
 export async function getAvailableCopies(bookId) {
-  const book = getBookById(bookId);
+  const book = await getBookById(bookId);
 
   if (!book) {
     return 0;
@@ -37,7 +37,7 @@ export async function borrowBook({
   bookId,
   user,
 }) {
-  const book = getBookById(bookId);
+  const book = await getBookById(bookId);
 
   if (!book) {
     return {
@@ -93,9 +93,9 @@ export async function getBorrowedBooksForUser(userId) {
     })
     .toArray();
 
-  return records
-    .map((record) => {
-      const book = getBookById(record.bookId);
+  const results = await Promise.all(
+    records.map(async (record) => {
+      const book = await getBookById(record.bookId);
 
       if (!book) {
         return null;
@@ -105,6 +105,8 @@ export async function getBorrowedBooksForUser(userId) {
         ...record,
         book,
       };
-    })
-    .filter(Boolean);
+    }),
+  );
+
+  return results.filter(Boolean);
 }

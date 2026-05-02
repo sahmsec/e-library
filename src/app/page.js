@@ -17,8 +17,10 @@ import { getAuthSession } from "@/lib/session";
 export default async function Home() {
   const session = await getAuthSession();
 
+  const featuredList = await getFeaturedBooks();
+
   const featuredBooks = await Promise.all(
-    getFeaturedBooks().map(async (book) => {
+    featuredList.map(async (book) => {
       const [copiesLeft, alreadyBorrowed] = await Promise.all([
         getAvailableCopies(book.id),
         session ? hasActiveBorrow(session.user.id, book.id) : false,
