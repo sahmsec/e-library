@@ -1,21 +1,31 @@
 {
-  "name": "e-library-build",
+  "name": "e-library",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "seed:books": "node scripts/seed-books.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint ."
   },
   "dependencies": {
+    "@better-auth/mongo-adapter": "^1.6.9",
+    "@fontsource/manrope": "^5.2.8",
+    "@fontsource/playfair-display": "^5.2.8",
+    "better-auth": "^1.6.9",
+    "lucide-react": "^1.14.0",
+    "mongodb": "^7.2.0",
     "next": "16.2.4",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "sonner": "^2.0.7",
+    "swiper": "^12.1.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "babel-plugin-react-compiler": "1.0.0",
+    "daisyui": "^5.5.19",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4"
