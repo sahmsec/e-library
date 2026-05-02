@@ -3,6 +3,8 @@ import { Search } from "lucide-react";
 
 import BookCard from "@/components/BookCard";
 import { bookCategories, filterBooks } from "@/lib/books";
+import { getAvailableCopies, hasActiveBorrow } from "@/lib/borrows";
+import { getAuthSession } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
 function buildFilterHref(category, search) {
@@ -24,10 +26,25 @@ export default async function BooksPage({ searchParams }) {
   const resolvedSearchParams = await searchParams;
   const search = resolvedSearchParams.search ?? "";
   const category = resolvedSearchParams.category ?? "All";
-  const books = filterBooks({
-    search,
-    category,
-  });
+  const session = await getAuthSession();
+
+  const books = await Promise.all(
+    filterBooks({
+      search,
+      category,
+    }).map(async (book) => {
+      const [copiesLeft, alreadyBorrowed] = await Promise.all([
+        getAvailableCopies(book.id),
+        session ? hasActiveBorrow(session.user.id, book.id) : false,
+      ]);
+
+      return {
+        ...book,
+        copiesLeft,
+        alreadyBorrowed,
+      };
+    }),
+  );
 
   return (
     <div className="space-y-8">
@@ -65,8 +82,7 @@ export default async function BooksPage({ searchParams }) {
       </section>
 
       <section className="grid gap-8 lg:grid-cols-[250px_minmax(0,1fr)]">
-        <aside className="library-card h-fit rounded-[2rem] border border-white/70 p-6">
-          <p className="text-sm uppercase tracking-[0.28em] text-library-copper">
+        <aside className="library-card h-fit rounded-[2rem] border border-white/70 p-6 lg:sticky lg:top-28">          <p className="text-sm uppercase tracking-[0.28em] text-library-copper">
             Categories
           </p>
           <div className="mt-5 grid gap-3">
@@ -95,7 +111,14 @@ export default async function BooksPage({ searchParams }) {
           {books.length ? (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {books.map((book) => (
-                <BookCard key={book.id} book={book} actionLabel="Details" />
+                <BookCard
+                  key={book.id}
+                  book={book}
+                  actionLabel="Details"
+                  showBorrowButton
+                  copiesLeft={book.copiesLeft}
+                  alreadyBorrowed={book.alreadyBorrowed}
+                />
               ))}
             </div>
           ) : (

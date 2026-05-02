@@ -11,9 +11,27 @@ import {
   memberStories,
   readerHighlights,
 } from "@/lib/books";
+import { getAvailableCopies, hasActiveBorrow } from "@/lib/borrows";
+import { getAuthSession } from "@/lib/session";
 
-export default function Home() {
-  const featuredBooks = getFeaturedBooks();
+export default async function Home() {
+  const session = await getAuthSession();
+
+  const featuredBooks = await Promise.all(
+    getFeaturedBooks().map(async (book) => {
+      const [copiesLeft, alreadyBorrowed] = await Promise.all([
+        getAvailableCopies(book.id),
+        session ? hasActiveBorrow(session.user.id, book.id) : false,
+      ]);
+
+      return {
+        ...book,
+        copiesLeft,
+        alreadyBorrowed,
+      };
+    }),
+  );
+
   const heroBook = featuredBooks[0] ?? null;
   const supportingBooks = featuredBooks.slice(1, 4);
 
@@ -24,7 +42,7 @@ export default function Home() {
         <div className="absolute bottom-0 left-0 h-52 w-52 rounded-full bg-library-copper/25 blur-3xl" />
 
         <div className="relative grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-          <div className="space-y-6">
+          <div className="space-y-6 self-center">
             <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.34em] text-library-sand">
               Digital library
             </span>
@@ -97,7 +115,8 @@ export default function Home() {
 
                     <div className="flex flex-wrap gap-2 pt-1">
                       <span className="rounded-full bg-library-sand px-4 py-2 text-sm font-semibold text-library-ink">
-                        {heroBook.available_quantity} copies available
+                        {heroBook.copiesLeft}{" "}
+                        {heroBook.copiesLeft === 1 ? "copy" : "copies"} available
                       </span>
                       <Link
                         href={`/books/${heroBook.id}`}
@@ -171,7 +190,15 @@ export default function Home() {
 
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           {featuredBooks.map((book) => (
-            <BookCard key={book.id} book={book} compact />
+            <BookCard
+              key={book.id}
+              book={book}
+              compact
+              actionLabel="Details"
+              showBorrowButton
+              copiesLeft={book.copiesLeft}
+              alreadyBorrowed={book.alreadyBorrowed}
+            />
           ))}
         </div>
       </section>

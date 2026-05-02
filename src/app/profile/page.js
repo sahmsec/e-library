@@ -1,17 +1,20 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Mail, PencilLine, UserRound } from "lucide-react";
+import { redirect } from "next/navigation";
 
-import { books } from "@/lib/books";
+import { getBorrowedBooksForUser } from "@/lib/borrows";
+import { getAuthSession } from "@/lib/session";
+import { buildLoginRedirect, formatDate } from "@/lib/utils";
 
-export default function ProfilePage() {
-  const borrowedBooks = books.slice(0, 2);
-  const user = {
-    id: "demo-user-id",
-    name: "Demo Reader",
-    email: "reader@example.com",
-    image: "https://placehold.co/160x160?text=EL",
-  };
+export default async function ProfilePage() {
+  const session = await getAuthSession();
+
+  if (!session) {
+    redirect(buildLoginRedirect("/profile"));
+  }
+
+  const borrowedBooks = await getBorrowedBooksForUser(session.user.id);
 
   return (
     <div className="space-y-8">
@@ -20,8 +23,8 @@ export default function ProfilePage() {
           <div className="flex items-center gap-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={user.image}
-              alt={`${user.name} avatar`}
+              src={session.user.image || "https://placehold.co/160x160?text=EL"}
+              alt={`${session.user.name} avatar`}
               className="size-24 rounded-full object-cover ring-4 ring-white"
             />
             <div>
@@ -29,7 +32,7 @@ export default function ProfilePage() {
                 My Profile
               </p>
               <h1 className="font-display text-4xl font-semibold text-library-ink">
-                {user.name}
+                {session.user.name}
               </h1>
             </div>
           </div>
@@ -40,7 +43,7 @@ export default function ProfilePage() {
                 Email
               </p>
               <p className="mt-2 text-sm font-semibold text-library-ink">
-                {user.email}
+                {session.user.email}
               </p>
             </div>
             <div className="rounded-[1.5rem] bg-white/90 p-5">
@@ -48,7 +51,7 @@ export default function ProfilePage() {
                 User ID
               </p>
               <p className="mt-2 break-all text-sm font-semibold text-library-ink">
-                {user.id}
+                {session.user.id}
               </p>
             </div>
           </div>
@@ -86,8 +89,8 @@ export default function ProfilePage() {
               Reader Snapshot
             </p>
             <p className="mt-4 text-sm leading-7 text-library-ink/70">
-              Your profile page shows personal information and borrowed books in
-              one place.
+              Your profile stores personal details and the books currently
+              borrowed by your account.
             </p>
           </div>
         </div>
@@ -103,38 +106,49 @@ export default function ProfilePage() {
           </h2>
         </div>
 
-        <div className="mt-8 grid gap-4">
-          {borrowedBooks.map((book) => (
-            <article
-              key={book.id}
-              className="grid gap-4 rounded-[1.75rem] border border-library-ink/10 bg-white/90 p-4 sm:grid-cols-[96px_minmax(0,1fr)] sm:p-5"
-            >
-              <Image
-                src={book.image_url}
-                alt={`${book.title} cover`}
-                width={96}
-                height={144}
-                className="h-32 w-full rounded-[1.25rem] object-cover sm:h-full"
-              />
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm uppercase tracking-[0.24em] text-library-copper">
-                    {book.category}
-                  </p>
-                  <h3 className="font-display text-3xl font-semibold text-library-ink">
-                    {book.title}
-                  </h3>
-                  <p className="text-sm text-library-ink/65">
-                    by {book.author}
+        {borrowedBooks.length ? (
+          <div className="mt-8 grid gap-4">
+            {borrowedBooks.map((record) => (
+              <article
+                key={record.id}
+                className="grid gap-4 rounded-[1.75rem] border border-library-ink/10 bg-white/90 p-4 sm:grid-cols-[96px_minmax(0,1fr)] sm:p-5"
+              >
+                <Image
+                  src={record.book.image_url}
+                  alt={`${record.book.title} cover`}
+                  width={96}
+                  height={144}
+                  className="h-32 w-full rounded-[1.25rem] object-cover sm:h-full"
+                />
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.24em] text-library-copper">
+                      {record.book.category}
+                    </p>
+                    <h3 className="font-display text-3xl font-semibold text-library-ink">
+                      {record.book.title}
+                    </h3>
+                    <p className="text-sm text-library-ink/65">
+                      by {record.book.author}
+                    </p>
+                  </div>
+                  <p className="text-sm leading-7 text-library-ink/70">
+                    Borrowed on {formatDate(record.borrowedAt)}
                   </p>
                 </div>
-                <p className="text-sm leading-7 text-library-ink/70">
-                  Borrowed on May 2, 2026
-                </p>
-              </div>
-            </article>
-          ))}
-        </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-8 rounded-[1.75rem] border border-library-ink/10 bg-white/90 p-8 text-center">
+            <h3 className="font-display text-3xl font-semibold text-library-ink">
+              Your shelf is empty.
+            </h3>
+            <p className="mt-3 text-sm leading-7 text-library-ink/65">
+              Borrow a title from the catalog and it will appear here.
+            </p>
+          </div>
+        )}
       </section>
     </div>
   );

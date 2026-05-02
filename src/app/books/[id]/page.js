@@ -1,7 +1,10 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
+import BorrowButton from "@/components/BorrowButton";
 import { getBookById } from "@/lib/books";
+import { getAvailableCopies, hasActiveBorrow } from "@/lib/borrows";
+import { getAuthSession } from "@/lib/session";
 
 export default async function BookDetailsPage({ params }) {
   const { id } = await params;
@@ -10,6 +13,12 @@ export default async function BookDetailsPage({ params }) {
   if (!book) {
     notFound();
   }
+
+  const session = await getAuthSession();
+  const copiesLeft = await getAvailableCopies(id);
+  const alreadyBorrowed = session
+    ? await hasActiveBorrow(session.user.id, id)
+    : false;
 
   return (
     <section className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
@@ -46,21 +55,21 @@ export default async function BookDetailsPage({ params }) {
 
           <div className="mt-6 flex flex-wrap items-center gap-4">
             <div className="rounded-full bg-library-ink px-5 py-3 text-sm font-semibold text-white">
-              {book.available_quantity}{" "}
-              {book.available_quantity === 1 ? "copy" : "copies"} left
+              {copiesLeft} {copiesLeft === 1 ? "copy" : "copies"} left
             </div>
-            <div className="rounded-full bg-library-mint/25 px-5 py-3 text-sm font-semibold text-library-ink">
-              Borrow feature coming next
-            </div>
+            {alreadyBorrowed ? (
+              <div className="rounded-full bg-library-mint/25 px-5 py-3 text-sm font-semibold text-library-ink">
+                Already in your borrowed shelf
+              </div>
+            ) : null}
           </div>
 
           <div className="mt-8">
-            <button
-              type="button"
-              className="btn h-13 rounded-full border-none bg-library-copper px-6 text-white hover:bg-[#a4572d]"
-            >
-              Borrow This Book
-            </button>
+            <BorrowButton
+              bookId={book.id}
+              copiesLeft={copiesLeft}
+              alreadyBorrowed={alreadyBorrowed}
+            />
           </div>
         </div>
 
@@ -70,18 +79,18 @@ export default async function BookDetailsPage({ params }) {
               Borrowing Note
             </p>
             <p className="mt-3 text-sm leading-7 text-library-ink/70">
-              Borrowed titles will later appear in the profile page for each
-              logged-in user.
+              Borrowed titles appear instantly in your profile after a
+              successful borrow.
             </p>
           </div>
 
           <div className="library-card rounded-[1.75rem] border border-white/70 p-6">
             <p className="text-sm uppercase tracking-[0.28em] text-library-copper">
-              Book Access
+              Account Check
             </p>
             <p className="mt-3 text-sm leading-7 text-library-ink/70">
-              This details page is ready now, and authentication can be added
-              after the UI is fully complete.
+              If a visitor is not logged in, clicking borrow sends them to the
+              login page first.
             </p>
           </div>
         </div>
