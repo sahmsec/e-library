@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Mail, PencilLine, UserRound } from "lucide-react";
 import { redirect } from "next/navigation";
 
+import ReturnButton from "@/components/ReturnButton";
 import { getBorrowedBooksForUser } from "@/lib/borrows";
 import { getAuthSession } from "@/lib/session";
 import { buildLoginRedirect, formatDate } from "@/lib/utils";
@@ -86,24 +87,26 @@ export default async function ProfilePage() {
           </div>
           <div className="library-card rounded-[2rem] border border-white/70 p-6 sm:col-span-2">
             <p className="text-sm uppercase tracking-[0.28em] text-library-copper">
-              Reader Snapshot
+              Account Overview
             </p>
             <p className="mt-4 text-sm leading-7 text-library-ink/70">
-              Your profile stores personal details and the books currently
-              borrowed by your account.
+              From this page, you can view your personal information, check how
+              many books you have borrowed, and update your profile when needed.
             </p>
           </div>
         </div>
       </section>
 
       <section className="library-card rounded-[2.25rem] border border-white/70 p-8">
-        <div>
-          <p className="text-sm uppercase tracking-[0.28em] text-library-copper">
-            Borrowed Shelf
-          </p>
-          <h2 className="font-display mt-2 text-4xl font-semibold text-library-ink">
-            Titles currently attached to your account.
-          </h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm uppercase tracking-[0.28em] text-library-copper">
+              Borrowed Shelf
+            </p>
+            <h2 className="font-display mt-2 text-4xl font-semibold text-library-ink">
+              Titles currently attached to your account.
+            </h2>
+          </div>
         </div>
 
         {borrowedBooks.length ? (
@@ -111,17 +114,18 @@ export default async function ProfilePage() {
             {borrowedBooks.map((record) => (
               <article
                 key={record.id}
-                className="grid gap-4 rounded-[1.75rem] border border-library-ink/10 bg-white/90 p-4 sm:grid-cols-[96px_minmax(0,1fr)] sm:p-5"
+                className="rounded-[1.75rem] border border-library-ink/10 bg-white/90 p-5"
               >
-                <Image
-                  src={record.book.image_url}
-                  alt={`${record.book.title} cover`}
-                  width={96}
-                  height={144}
-                  className="h-32 w-full rounded-[1.25rem] object-cover sm:h-full"
-                />
-                <div className="space-y-3">
-                  <div>
+                <div className="grid gap-5 md:grid-cols-[110px_minmax(0,1fr)_auto] md:items-center">
+                  <Image
+                    src={record.book.image_url}
+                    alt={`${record.book.title} cover`}
+                    width={110}
+                    height={160}
+                    className="h-36 w-28 rounded-[1.25rem] object-cover"
+                  />
+
+                  <div className="space-y-2">
                     <p className="text-sm uppercase tracking-[0.24em] text-library-copper">
                       {record.book.category}
                     </p>
@@ -131,10 +135,14 @@ export default async function ProfilePage() {
                     <p className="text-sm text-library-ink/65">
                       by {record.book.author}
                     </p>
+                    <p className="pt-2 text-sm leading-7 text-library-ink/70">
+                      Borrowed on {formatDate(record.borrowedAt)}
+                    </p>
                   </div>
-                  <p className="text-sm leading-7 text-library-ink/70">
-                    Borrowed on {formatDate(record.borrowedAt)}
-                  </p>
+
+                  <div className="md:justify-self-end">
+                    <ReturnButton bookId={record.book.id} />
+                  </div>
                 </div>
               </article>
             ))}

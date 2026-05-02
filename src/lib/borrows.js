@@ -83,6 +83,34 @@ export async function borrowBook({
   };
 }
 
+export async function returnBorrowedBook({
+  userId,
+  bookId,
+}) {
+  const record = await getBorrowCollection().findOne({
+    userId,
+    bookId,
+  });
+
+  if (!record) {
+    return {
+      ok: false,
+      status: 404,
+      error: "Borrow record not found.",
+    };
+  }
+
+  await getBorrowCollection().deleteOne({
+    userId,
+    bookId,
+  });
+
+  return {
+    ok: true,
+    message: "Book returned successfully.",
+  };
+}
+
 export async function getBorrowedBooksForUser(userId) {
   const records = await getBorrowCollection()
     .find({
