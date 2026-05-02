@@ -23,7 +23,7 @@ export default function Home() {
         <div className="absolute -right-8 top-8 h-44 w-44 rounded-full bg-white/10 blur-2xl" />
         <div className="absolute bottom-0 left-0 h-52 w-52 rounded-full bg-library-copper/25 blur-3xl" />
 
-        <div className="relative grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+        <div className="relative grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div className="space-y-6">
             <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.34em] text-library-sand">
               Digital library
