@@ -69,12 +69,6 @@ export default async function BookDetailsPage({ params }) {
             <div className="rounded-full bg-library-ink px-5 py-3 text-sm font-semibold text-white">
               {copiesLeft} {copiesLeft === 1 ? "copy" : "copies"} left
             </div>
-
-            {alreadyBorrowed ? (
-              <div className="rounded-full bg-library-mint/25 px-5 py-3 text-sm font-semibold text-library-ink">
-                Borrowed
-              </div>
-            ) : null}
           </div>
 
           <div className="mt-8">
@@ -82,6 +76,8 @@ export default async function BookDetailsPage({ params }) {
               bookId={book.id}
               copiesLeft={copiesLeft}
               alreadyBorrowed={alreadyBorrowed}
+              label="Borrow This Book"
+              borrowedLabel="Already Borrowed"
             />
           </div>
         </div>

@@ -11,6 +11,7 @@ export default function BorrowButton({
   copiesLeft,
   alreadyBorrowed,
   label = "Borrow",
+  borrowedLabel = "Borrowed",
   className,
 }) {
   const router = useRouter();
@@ -59,7 +60,7 @@ export default function BorrowButton({
       )}
     >
       {alreadyBorrowed
-        ? "Borrowed"
+        ? borrowedLabel
         : copiesLeft < 1
           ? "Unavailable"
           : label}

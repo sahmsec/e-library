@@ -63,6 +63,7 @@ export default function BookCard({
               copiesLeft={copiesLeft}
               alreadyBorrowed={alreadyBorrowed}
               label="Borrow"
+              borrowedLabel="Borrowed"
               className="w-full"
             />
           ) : null}
